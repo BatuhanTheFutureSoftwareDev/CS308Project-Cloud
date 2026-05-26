@@ -1,31 +1,31 @@
 version: "3.9"
 services:
-  mongo:
-    image: mongo
-    container_name: mongo-db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-
-  backend:
+  app:
     build:
-      context: ./server
-    container_name: backend-service
+      context: .
+    container_name: cs436-app
     ports:
       - "5001:5001"
-    depends_on:
-      - mongo
     environment:
-      - MONGO_URL=mongodb://mongo-db:27017/cs308db
-
-  frontend:
-    build: .
-    container_name: frontend-service
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-
-volumes:
-  mongo-data:
+      - PORT=5001
+      - AWS_REGION=${AWS_REGION:-eu-west-1}
+      # For local dev only — in ECS, IAM credentials come from the task role.
+      # Leave these unset in production; the AWS SDK auto-discovers them.
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - SALES_ADMIN_JWT_SECRET=${SALES_ADMIN_JWT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      # Optional table-name overrides; defaults match the AWS console.
+      - TABLE_USERS=cs436-db-users
+      - TABLE_PRODUCTS=cs436-db-products
+      - TABLE_CATEGORIES=cs436-db-categories
+      - TABLE_CARTS=cs436-db-carts
+      - TABLE_WISHLISTS=cs436-db-wishlists
+      - TABLE_REVIEWS=cs436-db-reviews
+      - TABLE_PURCHASES=cs436-db-purchases
+      - TABLE_REFUND_REQUESTS=cs436-db-refund-requests
+      - TABLE_ADMINS=cs436-db-admins
+      - TABLE_SALES_ADMINS=cs436-db-sales-admins

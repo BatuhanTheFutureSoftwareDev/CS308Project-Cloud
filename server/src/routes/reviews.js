@@ -6,7 +6,6 @@ const Purchase = require("../models/Purchase");
 const jwt = require("jsonwebtoken");
 const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET;
 
-// 🔒 Token authentication middleware
 function authenticateToken(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, error: "Token missing" });
@@ -18,19 +17,16 @@ function authenticateToken(req, res, next) {
   });
 }
 
-// Accepts either a user token or an admin token
 function authenticateUserOrAdmin(req, res, next) {
   const token = req.headers["authorization"]?.split(" ")[1];
   if (!token) return res.status(401).json({ success: false, error: "Token missing" });
 
-  // Try user token first
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (!err) {
       req.user = user;
       req.isAdmin = false;
       return next();
     }
-    // Try admin token
     jwt.verify(token, ADMIN_JWT_SECRET, (err2, admin) => {
       if (!err2) {
         req.user = admin;
@@ -42,7 +38,6 @@ function authenticateUserOrAdmin(req, res, next) {
   });
 }
 
-// ✏️ POST /reviews/:productId — Submit a review (status = pending or auto-approved if no comment)
 router.post("/:productId", authenticateToken, async (req, res) => {
   const { rating, comment } = req.body;
   const { productId } = req.params;
@@ -51,13 +46,13 @@ router.post("/:productId", authenticateToken, async (req, res) => {
   if (!rating && !trimmedComment) {
     return res.status(400).json({ success: false, error: "At least a rating or comment is required." });
   }
-
   if (trimmedComment && (!rating || rating < 1 || rating > 5)) {
     return res.status(400).json({ success: false, error: "A valid rating is required to post a comment." });
   }
 
   try {
-    const hasPurchased = await Purchase.findOne({ userId: req.user.id, productId });
+    const userPurchases = await Purchase.find({ userId: req.user.id });
+    const hasPurchased = userPurchases.some((p) => String(p.productId) === String(productId));
     if (!hasPurchased) {
       return res.status(403).json({ success: false, error: "You can only review products you've purchased." });
     }
@@ -67,32 +62,30 @@ router.post("/:productId", authenticateToken, async (req, res) => {
       return res.status(400).json({ success: false, error: "You already reviewed this product." });
     }
 
-    // Auto-approve if no comment
-    const review = new Review({
+    await new Review({
       userId: req.user.id,
       productId,
       rating,
       comment: trimmedComment,
       status: trimmedComment ? "pending" : "approved",
-    });
+    }).save();
 
-    await review.save();
-
-    // ⭐ Update product average rating (ALL reviews counted, no status check)
     const allReviews = await Review.find({ productId });
-    const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0);
-    const average = allReviews.length ? (totalRating / allReviews.length) : 0;
+    const totalRating = allReviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0);
+    const average = allReviews.length ? totalRating / allReviews.length : 0;
 
     await Product.findByIdAndUpdate(productId, { averageRating: average });
 
-    res.status(201).json({ success: true, message: trimmedComment ? "Review submitted and awaiting approval." : "Review submitted and auto-approved." });
+    res.status(201).json({
+      success: true,
+      message: trimmedComment ? "Review submitted and awaiting approval." : "Review submitted and auto-approved.",
+    });
   } catch (error) {
     console.error("Error submitting review:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// 📋 GET /reviews/:productId — Get reviews (ratings always, comments only if approved; admin sees only reviews with comments)
 router.get("/:productId", async (req, res) => {
   let isAdmin = false;
   if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
@@ -106,9 +99,8 @@ router.get("/:productId", async (req, res) => {
     const allReviews = await Review.find({ productId: req.params.productId });
     let response;
     if (isAdmin) {
-      // Admin: only show reviews with a non-empty comment
       response = allReviews
-        .filter(r => r.comment && r.comment.trim() !== "")
+        .filter((r) => r.comment && r.comment.trim() !== "")
         .map((r) => ({
           _id: r._id,
           rating: r.rating,
@@ -118,7 +110,6 @@ router.get("/:productId", async (req, res) => {
           updatedAt: r.updatedAt,
         }));
     } else {
-      // User: show all ratings, but only approved comments
       response = allReviews.map((r) => ({
         _id: r._id,
         rating: r.rating,
@@ -135,11 +126,9 @@ router.get("/:productId", async (req, res) => {
   }
 });
 
-// ✅ PATCH /reviews/:id/approve — Approve a review
 router.patch("/:id/approve", authenticateUserOrAdmin, async (req, res) => {
   try {
     await Review.findByIdAndUpdate(req.params.id, { status: "approved" });
-
     res.json({ success: true, message: "Review approved successfully." });
   } catch (error) {
     console.error("Error approving review:", error);
@@ -147,11 +136,9 @@ router.patch("/:id/approve", authenticateUserOrAdmin, async (req, res) => {
   }
 });
 
-// ✅ PATCH /reviews/:id/decline — Decline a review
 router.patch("/:id/decline", authenticateUserOrAdmin, async (req, res) => {
   try {
     await Review.findByIdAndUpdate(req.params.id, { status: "declined" });
-
     res.json({ success: true, message: "Review declined successfully." });
   } catch (error) {
     console.error("Error declining review:", error);

@@ -1,70 +1,46 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const connectDB = require('./config'); 
+require("dotenv").config();
+const path = require("path");
+const express = require("express");
+const cors = require("cors");
+const { ping } = require("./config");
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+ping().catch(() => {});
 
-// Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Import Routes
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);
+app.use("/auth", require("./routes/auth"));
+app.use("/products", require("./routes/products"));
+app.use("/reviews", require("./routes/reviews"));
+app.use("/cart", require("./routes/cart"));
+app.use("/purchase", require("./routes/purchase"));
+app.use("/api/refund", require("./routes/refund"));
+app.use("/productmanager", require("./routes/productmanager"));
+app.use("/salesmanager", require("./routes/salesmanager"));
+app.use("/wishlist", require("./routes/wishlist"));
+app.use("/user", require("./routes/profile"));
+app.use("/apply-discount", require("./routes/applyDiscount"));
 
-const productRoutes = require('./routes/products');
-app.use('/products', productRoutes);
+app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
-const reviewRoutes = require('./routes/reviews');
-app.use('/reviews', reviewRoutes);
-
-const cartRoutes = require('./routes/cart');
-app.use('/cart', cartRoutes);
-
-const purchaseRoutes = require('./routes/purchase');
-app.use('/purchase', purchaseRoutes);
-
-const refundRoutes = require('./routes/refund');
-app.use('/api/refund', refundRoutes);
-
-const pmRoutes = require('./routes/productmanager');
-app.use('/productmanager', pmRoutes);
-
-const salesManagerRoutes = require('./routes/salesmanager');
-app.use('/salesmanager', salesManagerRoutes);
-
-const wishlistRoutes = require('./routes/wishlist');
-app.use('/wishlist', wishlistRoutes);
-
-const profileRoutes = require('./routes/profile');
-app.use('/user', profileRoutes);
-
-// ✅ Apply Discount Route
-const applyDiscountRoutes = require('./routes/applyDiscount');
-app.use('/apply-discount', applyDiscountRoutes);
-
-// Frontend Pages
-app.get('/', (req, res) => {
-  res.render('login');
-});
-
-app.get('/login', (req, res) => {
-  res.render('login');
-});
-
-app.get('/signup', (req, res) => {
-  res.render('signup');
+const PUBLIC_DIR = path.join(__dirname, "..", "public");
+app.use(express.static(PUBLIC_DIR));
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/auth") || req.path.startsWith("/products") ||
+      req.path.startsWith("/reviews") || req.path.startsWith("/cart") ||
+      req.path.startsWith("/purchase") || req.path.startsWith("/api") ||
+      req.path.startsWith("/productmanager") || req.path.startsWith("/salesmanager") ||
+      req.path.startsWith("/wishlist") || req.path.startsWith("/user") ||
+      req.path.startsWith("/apply-discount") || req.path.startsWith("/healthz")) {
+    return next();
+  }
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
 const port = process.env.PORT || 5001;
-app.listen(port, () => {
-  console.log(`Server running on Port: ${port}`);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server running on port ${port}`);
 });

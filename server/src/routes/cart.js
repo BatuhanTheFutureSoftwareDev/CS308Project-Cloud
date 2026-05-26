@@ -2,10 +2,9 @@ const express = require("express");
 const router = express.Router();
 const Cart = require("../models/Cart");
 const User = require("../models/User");
-const jwt = require("jsonwebtoken");
 const Product = require("../models/Product");
+const jwt = require("jsonwebtoken");
 
-// Token verification middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers["authorization"];
   const token = authHeader && authHeader.split(" ")[1];
@@ -18,24 +17,19 @@ function authenticateToken(req, res, next) {
   });
 }
 
-/* ───────── NEW: Check Address Before Checkout ───────── */
 router.get("/user/address", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("address");
-
-    if (!user) {
-      return res.status(404).json({ success: false, error: "User not found" });
-    }
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ success: false, error: "User not found" });
 
     const address = user.address?.trim();
     if (!address) {
       return res.status(200).json({
-      success: true,
-      address: null,
-      message: "Address is missing. Please update your address in the profile page.",
+        success: true,
+        address: null,
+        message: "Address is missing. Please update your address in the profile page.",
       });
-    }  
-
+    }
     res.json({ success: true, address });
   } catch (error) {
     console.error("Error checking address:", error);
@@ -43,7 +37,6 @@ router.get("/user/address", authenticateToken, async (req, res) => {
   }
 });
 
-/* ───────── Merge Cart ───────── */
 router.post("/merge", authenticateToken, async (req, res) => {
   const { items } = req.body;
   if (!items || !Array.isArray(items)) {
@@ -55,12 +48,11 @@ router.post("/merge", authenticateToken, async (req, res) => {
       const { productId, quantity, orderId } = item;
       if (!productId) continue;
 
-      const existingItem = await Cart.findOne({ userId: req.user.id, productId });
-
-      if (existingItem) {
-        existingItem.quantity += quantity || 1;
-        if (orderId) existingItem.orderId = orderId;
-        await existingItem.save();
+      const existing = await Cart.findOne({ userId: req.user.id, productId });
+      if (existing) {
+        existing.quantity = (existing.quantity || 0) + (quantity || 1);
+        if (orderId) existing.orderId = orderId;
+        await existing.save();
       } else {
         await new Cart({
           userId: req.user.id,
@@ -76,34 +68,27 @@ router.post("/merge", authenticateToken, async (req, res) => {
   }
 });
 
-/* ───────── Add Single Product to Cart ───────── */
 router.post("/add", authenticateToken, async (req, res) => {
   const { productId, quantity, orderId, setQuantity } = req.body;
-  if (!productId) {
-    return res.status(400).json({ success: false, error: "Product ID is required." });
-  }
+  if (!productId) return res.status(400).json({ success: false, error: "Product ID is required." });
 
   try {
-    // Get the product to access its price information
     const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ success: false, error: "Product not found." });
-    }
+    if (!product) return res.status(404).json({ success: false, error: "Product not found." });
 
-    const existingItem = await Cart.findOne({ userId: req.user.id, productId });
+    const existing = await Cart.findOne({ userId: req.user.id, productId });
 
-    if (existingItem) {
+    if (existing) {
       if (setQuantity) {
-        existingItem.quantity = quantity || 1;  // Set exact quantity
+        existing.quantity = quantity || 1;
       } else {
-        existingItem.quantity += quantity || 1;  // Add to existing quantity
+        existing.quantity = (existing.quantity || 0) + (quantity || 1);
       }
-      if (orderId) existingItem.orderId = orderId;
-      await existingItem.save();
+      if (orderId) existing.orderId = orderId;
+      await existing.save();
       return res.json({ success: true, message: "Cart updated." });
     }
 
-    // Create new cart item with price information
     await new Cart({
       userId: req.user.id,
       productId,
@@ -111,7 +96,7 @@ router.post("/add", authenticateToken, async (req, res) => {
       orderId: orderId || undefined,
       price: product.price,
       discountedPrice: product.discountedPrice || null,
-      discountAmount: product.discountAmount || null
+      discountAmount: product.discountAmount || null,
     }).save();
 
     res.status(201).json({ success: true, message: "Product added to cart." });
@@ -120,28 +105,26 @@ router.post("/add", authenticateToken, async (req, res) => {
   }
 });
 
-/* ───────── Get User's Cart ───────── */
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const items = await Cart.find({ userId: req.user.id }).populate("productId");
-    // Transform the data to include price information
-    const transformedItems = items.map(item => ({
-      ...item.toObject(),
-      productId: {
-        ...item.productId.toObject(),
-        // Use the stored price information instead of current product price
-        price: item.price,
-        discountedPrice: item.discountedPrice,
-        discountAmount: item.discountAmount
+    const transformedItems = items.map((item) => {
+      const flat = { ...item };
+      const product = item.productId && typeof item.productId === "object" ? { ...item.productId } : null;
+      if (product) {
+        product.price = item.price;
+        product.discountedPrice = item.discountedPrice;
+        product.discountAmount = item.discountAmount;
       }
-    }));
+      flat.productId = product || item.productId;
+      return flat;
+    });
     res.json({ success: true, data: transformedItems });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-/* ───────── Delete Item from Cart ───────── */
 router.delete("/:productId", authenticateToken, async (req, res) => {
   try {
     await Cart.findOneAndDelete({ userId: req.user.id, productId: req.params.productId });
