@@ -12,7 +12,7 @@ export default function SalesManagerPage() {
 
   const loadPendingProducts = async () => {
     try {
-      const res = await fetch("http://localhost:5001/salesmanager/pending-products", {
+      const res = await fetch("/salesmanager/pending-products", {
         headers: { Authorization: `Bearer ${adminToken}` }
       });
       const json = await res.json();
@@ -39,7 +39,7 @@ export default function SalesManagerPage() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:5001/salesmanager/products/${id}/price`, {
+      const res = await fetch(`/salesmanager/products/${id}/price`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

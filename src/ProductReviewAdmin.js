@@ -55,7 +55,7 @@ export default function ProductReviewAdmin({ productId, token }) {
                 setStatusMsg(m => ({ ...m, [r._id]: "" }));
                 try {
                   const res = await fetch(
-                    `http://localhost:5001/reviews/${r._id}/${newStatus === "approved" ? "approve" : "decline"}`,
+                    `/reviews/${r._id}/${newStatus === "approved" ? "approve" : "decline"}`,
                     {
                       method : "PATCH",
                       headers: {

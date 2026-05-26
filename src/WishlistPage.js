@@ -17,7 +17,7 @@ function WishlistPage() {
     if (!token) return;
 
     try {
-      const res  = await fetch("http://localhost:5001/wishlist",
+      const res  = await fetch("/wishlist",
                                { headers:{ Authorization:`Bearer ${token}` } });
       const data = await res.json();
       if (data.success) setWishlist(data.data);
@@ -28,7 +28,7 @@ function WishlistPage() {
   const removeFromWishlist = async (productId) => {
     const token = localStorage.getItem("token");
     try {
-      await fetch(`http://localhost:5001/wishlist/${productId}`, {
+      await fetch(`/wishlist/${productId}`, {
         method:"DELETE",
         headers:{ Authorization:`Bearer ${token}` },
       });

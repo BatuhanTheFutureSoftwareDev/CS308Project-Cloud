@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const CART_STORAGE_KEY = 'shopping_cart';
 const CartContext = createContext();
 
-const API_URL = 'http://localhost:5001/cart';
+const API_URL = '/cart';
 
 export const CartProvider = ({ children }) => {
   // If not logged in, load the initial cart from localStorage.

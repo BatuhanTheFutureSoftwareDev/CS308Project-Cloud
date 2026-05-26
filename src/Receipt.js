@@ -5,7 +5,7 @@ import "./Receipt.css";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE_URL?.replace(/\/$/,"") ||
-  (window.location.hostname==="localhost" ? "http://localhost:5001" : "");
+  (window.location.hostname==="localhost" ? "" : "");
 
 export default function Receipt() {
   const { orderId } = useParams();

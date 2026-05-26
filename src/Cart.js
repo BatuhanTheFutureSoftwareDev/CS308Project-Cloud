@@ -25,7 +25,7 @@ function Cart() {
       const newMap = {};
       for (const item of cart) {
         try {
-          const res = await fetch(`http://localhost:5001/products/${item.id}`);
+          const res = await fetch(`/products/${item.id}`);
           const data = await res.json();
           if (data.success && data.data?.image1) {
             newMap[item.id] = data.data.image1;
@@ -55,7 +55,7 @@ function Cart() {
     }
 
     try {
-      const res = await fetch('http://localhost:5001/cart/user/address', {
+      const res = await fetch('/cart/user/address', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -84,7 +84,7 @@ function Cart() {
 
   const handleQuantityChange = async (item, newQuantity) => {
     try {
-      const response = await fetch(`http://localhost:5001/products/${item.id}`);
+      const response = await fetch(`/products/${item.id}`);
       const data = await response.json();
 
       if (data.success) {

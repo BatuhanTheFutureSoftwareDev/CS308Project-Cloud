@@ -21,7 +21,7 @@ export default function SaleNotification() {
       if (!token) { localStorage.removeItem("showSaleNotification"); return; }
 
       try {
-        const res  = await fetch("http://localhost:5001/wishlist",
+        const res  = await fetch("/wishlist",
                                  { headers:{ Authorization:`Bearer ${token}` } });
         const json = await res.json();
 

@@ -21,11 +21,11 @@ export default function ProductManagerPage() {
   const load = useCallback(async () => {
     const headers = { Authorization: `Bearer ${adminToken}` };
 
-    const c = await fetch("http://localhost:5001/productmanager/categories",
+    const c = await fetch("/productmanager/categories",
                           { headers }).then(r => r.json());
     if (c.success) setCats(c.data);
 
-    const p = await fetch("http://localhost:5001/productmanager/products",
+    const p = await fetch("/productmanager/products",
                           { headers }).then(r => r.json());
     if (p.success) setProducts(p.data);
   }, [adminToken]);
@@ -41,7 +41,7 @@ export default function ProductManagerPage() {
       setStatus({ msg:`Category "${name}" already exists.`, error:true });
       return;
     }
-    const out = await fetch("http://localhost:5001/productmanager/categories", {
+    const out = await fetch("/productmanager/categories", {
       method:"POST",
       headers:{
         "Content-Type":"application/json",
@@ -57,7 +57,7 @@ export default function ProductManagerPage() {
   const delCategory = async name => {
     if (!window.confirm(`Delete "${name}"?`)) return;
     const out = await fetch(
-      `http://localhost:5001/productmanager/categories/${encodeURIComponent(name)}`,
+      `/productmanager/categories/${encodeURIComponent(name)}`,
       { method:"DELETE", headers:{ Authorization:`Bearer ${adminToken}` } }
     ).then(r => r.json());
 
@@ -76,7 +76,7 @@ export default function ProductManagerPage() {
       return;
     }
     const out = await fetch(
-      `http://localhost:5001/productmanager/products/${id}/stock`,
+      `/productmanager/products/${id}/stock`,
       {
         method:"PUT",
         headers:{
@@ -98,7 +98,7 @@ export default function ProductManagerPage() {
   const removeProduct = async id => {
     if (!window.confirm("Remove this product?")) return;
     const out = await fetch(
-      `http://localhost:5001/productmanager/products/${id}`,
+      `/productmanager/products/${id}`,
       { method:"DELETE", headers:{ Authorization:`Bearer ${adminToken}` } }
     ).then(r => r.json());
 
@@ -114,7 +114,7 @@ export default function ProductManagerPage() {
                   error:true });
       return;
     }
-    const out = await fetch("http://localhost:5001/productmanager/products",
+    const out = await fetch("/productmanager/products",
       {
         method:"POST",
         headers:{

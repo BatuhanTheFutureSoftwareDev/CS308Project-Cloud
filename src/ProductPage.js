@@ -14,12 +14,12 @@ function ProductPage({ openModal, isSignedIn, signOut }) {
   const [isWishlisted, setWishlisted] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:5001/products/sort?by=name&order=asc')
+    fetch('/products/sort?by=name&order=asc')
       .then(res => res.json())
       .then(data => data.success && setProducts(data.data))
       .catch(console.error);
 
-    fetch(`http://localhost:5001/reviews/${productId}`)
+    fetch(`/reviews/${productId}`)
       .then(res => res.json())
       .then(data => data.success && setReviews(data.data))
       .catch(console.error);
@@ -27,7 +27,7 @@ function ProductPage({ openModal, isSignedIn, signOut }) {
     // Check if product is already wishlisted
     if (isSignedIn) {
       const token = localStorage.getItem("token");
-      fetch(`http://localhost:5001/wishlist`, {
+      fetch(`/wishlist`, {
         headers: { Authorization: `Bearer ${token}` }
       })
         .then(res => res.json())
@@ -84,7 +84,7 @@ function ProductPage({ openModal, isSignedIn, signOut }) {
     }
     const token = localStorage.getItem("token");
     try {
-      const res = await fetch("http://localhost:5001/wishlist/add", {
+      const res = await fetch("/wishlist/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

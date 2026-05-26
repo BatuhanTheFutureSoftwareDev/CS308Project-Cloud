@@ -57,7 +57,7 @@ export default function OrderDetailsPage() {
       if (!token) return navigate("/home");
 
       try {
-        const res  = await fetch("http://localhost:5001/purchase/user", {
+        const res  = await fetch("/purchase/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
@@ -157,7 +157,7 @@ export default function OrderDetailsPage() {
       setRole("none");
       return;
     }
-    fetch("http://localhost:5001/auth/is-admin", {
+    fetch("/auth/is-admin", {
       headers: { Authorization: `Bearer ${tokenToUse}` },
     })
       .then(res => res.json())

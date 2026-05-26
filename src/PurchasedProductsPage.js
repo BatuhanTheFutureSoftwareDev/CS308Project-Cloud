@@ -26,7 +26,7 @@
 //       if (!token) return;
 
 //       try {
-//         const res  = await fetch("http://localhost:5001/purchase/user", {
+//         const res  = await fetch("/purchase/user", {
 //           headers: { Authorization: `Bearer ${token}` },
 //         });
 //         const json = await res.json();
@@ -237,7 +237,7 @@ export default function RefundRequestsPage() {
       }
 
       try {
-        const res = await fetch("http://localhost:5001/api/refund/all", {
+        const res = await fetch("/api/refund/all", {
           headers: { Authorization: `Bearer ${adminToken}` },
         });
 
@@ -261,7 +261,7 @@ export default function RefundRequestsPage() {
   const handleRefundAction = async (id, action) => {
     setProcessing((p) => ({ ...p, [id]: true }));
     try {
-      const res = await fetch(`http://localhost:5001/api/refund/${id}/${action}`, {
+      const res = await fetch(`/api/refund/${id}/${action}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

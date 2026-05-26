@@ -37,7 +37,7 @@ export default function OrderDetailsPageUser({ token }) {
       setRole("none");
       return;
     }
-    fetch("http://localhost:5001/auth/is-admin", {
+    fetch("/auth/is-admin", {
       headers: { Authorization: `Bearer ${tokenToUse}` },
     })
       .then(res => res.json())
@@ -56,7 +56,7 @@ export default function OrderDetailsPageUser({ token }) {
     (async () => {
       if (!token) return navigate("/home");
       try {
-        const res  = await fetch("http://localhost:5001/purchase/user", {
+        const res  = await fetch("/purchase/user", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
@@ -104,7 +104,7 @@ export default function OrderDetailsPageUser({ token }) {
     setCanceling(s => ({ ...s, [itemId]: true }));
     setCancelMsg(m => ({ ...m, [itemId]: "" }));
     try {
-      const res = await fetch(`http://localhost:5001/purchase/${itemId}/cancel`, {
+      const res = await fetch(`/purchase/${itemId}/cancel`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -140,7 +140,7 @@ export default function OrderDetailsPageUser({ token }) {
         setRefunding(s => ({ ...s, [itemId]: false }));
         return;
       }
-      const res = await fetch(`http://localhost:5001/api/refund/request`, {
+      const res = await fetch(`/api/refund/request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
