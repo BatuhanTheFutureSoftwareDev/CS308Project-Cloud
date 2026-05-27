@@ -1,0 +1,30 @@
+# --- Stage 1: build React frontend ---
+FROM node:18 AS build
+WORKDIR /frontend
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+COPY public ./public
+COPY src ./src
+RUN npm run build
+
+# --- Stage 2: nginx serving the React build + proxying API to the backend ALB ---
+FROM nginx:1.27-alpine
+
+# envsubst lives in gettext on Alpine.
+RUN apk add --no-cache gettext
+
+COPY --from=build /frontend/build /usr/share/nginx/html
+
+# The official nginx image's 20-envsubst-on-templates.sh will render any
+# /etc/nginx/templates/*.template through envsubst at container start,
+# writing the output to /etc/nginx/conf.d/.
+COPY nginx/nginx.conf.template /etc/nginx/templates/default.conf.template
+
+# Our own sanity check runs at prefix 05, before the nginx envsubst pass at 20.
+COPY nginx/entrypoint.sh /docker-entrypoint.d/05-check-backend-url.sh
+RUN chmod +x /docker-entrypoint.d/05-check-backend-url.sh
+
+# Default for local docker-compose; overridden in ECS to the internal ALB DNS.
+ENV BACKEND_URL=http://backend:5001
+
+EXPOSE 80
