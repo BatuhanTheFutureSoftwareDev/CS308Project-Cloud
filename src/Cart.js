@@ -11,7 +11,7 @@ function Cart() {
   const { cart, removeFromCart, updateQuantity, getTotalPrice } = useCart();
   const [productImages, setProductImages] = useState({});
 
-  const getImage = (imageName) => {
+  const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
     if (!imageName) return images('./logo.png');
     try {
       return images(`./${imageName}`);

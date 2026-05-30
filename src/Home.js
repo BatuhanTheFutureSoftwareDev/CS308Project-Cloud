@@ -47,7 +47,7 @@ function Home() {
       .catch(console.error);
   }, [selectedCategory]);
 
-  const getImage = (imageName) => {
+  const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
     try {
       return require(`./assets/${imageName}`);
     } catch {

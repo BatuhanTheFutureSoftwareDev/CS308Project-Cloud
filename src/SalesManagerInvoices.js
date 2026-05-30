@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SalesManagerInvoices.css";
 
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try {
     return require(`./assets/${imageName}`);
   } catch {

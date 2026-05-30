@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SaleNotification.css";
 
-const getImage = (img) => {
+const getImage = (img) => { if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) return img;
   try   { return require(`./assets/${img}`); }
   catch { return require("./assets/logo.png"); }
 };

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./WishlistPage.css";
 
 const images = require.context("./assets", false, /\.(png|jpe?g|webp|svg)$/);
-const getImage = (name) => {
+const getImage = (name) => { if (typeof name === "string" && (name.startsWith("http://") || name.startsWith("https://"))) return name;
   try { return images(`./${name}`); }
   catch { return images("./logo.png"); }
 };

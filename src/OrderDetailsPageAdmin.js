@@ -9,7 +9,7 @@ const DELIVERY_OPTIONS = [
   { value: "delivered", label: "Delivered" },
 ];
 
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try   { return require(`./assets/${imageName}`); }
   catch { return require("./assets/logo.png"); }
 };

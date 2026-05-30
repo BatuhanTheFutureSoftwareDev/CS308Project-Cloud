@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./RefundRequestsPage.css";
 
 // Add getImage helper
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try {
     return require(`./assets/${imageName}`);
   } catch {

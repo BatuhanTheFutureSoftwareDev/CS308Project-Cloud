@@ -4,7 +4,7 @@
 // import "./PurchasedProductsPage.css";
 
 // /* ─────────── same helper used in Shop.js ─────────── */
-// const getImage = (imageName) => {
+// const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
 //   try {
 //     return require(`./assets/${imageName}`);
 //   } catch {
@@ -210,7 +210,7 @@ import { useNavigate } from "react-router-dom";
 import "./RefundRequestsPage.css";
 
 // Helper to load a local image, falling back to logo.png
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try {
     return require(`./assets/${imageName}`);
   } catch {
