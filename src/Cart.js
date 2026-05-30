@@ -123,7 +123,7 @@ function Cart() {
               {cart.map((it) => (
                 <div key={it.id} className="cart-item">
                   <img
-                    src={getImage(productImages[it.id])}
+                    src={getImage(it.image1 || productImages[it.id])}
                     alt={it.name}
                     className="cart-item-image"
                   />
@@ -131,12 +131,12 @@ function Cart() {
                     <h3>{it.name}</h3>
                     {it.discountedPrice ? (
                       <div className="cart-item-price">
-                        <span className="original-price">€{it.price.toFixed(2)}</span>
-                        <span className="discounted-price">€{it.discountedPrice.toFixed(2)}</span>
+                        <span className="original-price">€{Number(it.price || 0).toFixed(2)}</span>
+                        <span className="discounted-price">€{Number(it.discountedPrice || 0).toFixed(2)}</span>
                         <span className="discount-badge">-{it.discountAmount}%</span>
                       </div>
                     ) : (
-                      <p className="cart-item-price">€{it.price.toFixed(2)}</p>
+                      <p className="cart-item-price">€{Number(it.price || 0).toFixed(2)}</p>
                     )}
                   </div>
                   <div className="cart-item-quantity">
@@ -156,7 +156,7 @@ function Cart() {
                     </button>
                   </div>
                   <div className="cart-item-total">
-                    €{((it.discountedPrice || it.price) * it.quantity).toFixed(2)}
+                    €{Number((it.discountedPrice || it.price || 0) * (it.quantity || 0)).toFixed(2)}
                   </div>
                   <button
                     className="remove-btn"
