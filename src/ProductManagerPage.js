@@ -13,6 +13,7 @@ export default function ProductManagerPage() {
     name: "", category: "", color: "", description: "",
     stock: 10, image1: "", image2: "", image3: ""
   });
+  const [imageUploading, setImageUploading] = useState({ image1: false, image2: false, image3: false });
 
   const adminToken = localStorage.getItem("adminToken");
   const navigate   = useNavigate();
@@ -91,6 +92,30 @@ export default function ProductManagerPage() {
     if (out.success) {
       setStockEdits(p => ({ ...p, [id]: undefined }));
       load();
+    }
+  };
+
+  /* ---------- image upload to S3 (via backend proxy) ---------- */
+  const uploadImage = async (slot, file) => {
+    if (!file) return;
+    setImageUploading(p => ({ ...p, [slot]: true }));
+    setStatus({ msg: "", error: false });
+    try {
+      const form = new FormData();
+      form.append("image", file);
+      const res = await fetch("/productmanager/upload-image", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${adminToken}` },
+        body: form,
+      });
+      const out = await res.json();
+      if (!out.success) throw new Error(out.msg || "Upload failed");
+      setNewProd(p => ({ ...p, [slot]: out.url }));
+      setStatus({ msg: `${slot} uploaded ✔`, error: false });
+    } catch (err) {
+      setStatus({ msg: `${slot} upload failed: ${err.message}`, error: true });
+    } finally {
+      setImageUploading(p => ({ ...p, [slot]: false }));
     }
   };
 
@@ -226,22 +251,32 @@ export default function ProductManagerPage() {
               value={newProd.stock}
               onChange={e => setNewProd({ ...newProd, stock: e.target.value })}
             />
-            <input
-              placeholder="Image 1"
-              value={newProd.image1}
-              onChange={e => setNewProd({ ...newProd, image1: e.target.value })}
-            />
-            <input
-              placeholder="Image 2"
-              value={newProd.image2}
-              onChange={e => setNewProd({ ...newProd, image2: e.target.value })}
-            />
-            <input
-              placeholder="Image 3"
-              value={newProd.image3}
-              onChange={e => setNewProd({ ...newProd, image3: e.target.value })}
-            />
-            <button className="white-btn" type="submit">Add Product</button>
+            {["image1", "image2", "image3"].map(slot => (
+              <div key={slot} className="admin-image-upload-row">
+                <label>{slot.replace("image", "Image ")}:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  disabled={imageUploading[slot]}
+                  onChange={e => uploadImage(slot, e.target.files?.[0])}
+                />
+                {imageUploading[slot] && <span> uploading…</span>}
+                {newProd[slot] && !imageUploading[slot] && (
+                  <img
+                    src={newProd[slot]}
+                    alt={slot}
+                    style={{ width: 60, height: 60, objectFit: "cover", marginLeft: 8, borderRadius: 4 }}
+                  />
+                )}
+              </div>
+            ))}
+            <button
+              className="white-btn"
+              type="submit"
+              disabled={Object.values(imageUploading).some(Boolean)}
+            >
+              Add Product
+            </button>
           </form>
         </div>
       </div>

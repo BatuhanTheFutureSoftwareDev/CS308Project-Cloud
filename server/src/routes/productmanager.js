@@ -1,8 +1,10 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
 const router = express.Router();
 const Category = require("../models/Category");
 const Product = require("../models/Product");
+const { uploadProductImage } = require("../s3");
 
 function requireAdmin(req, res, next) {
   const token = req.headers.authorization?.split(" ")[1];
@@ -14,6 +16,33 @@ function requireAdmin(req, res, next) {
     next();
   });
 }
+
+// multer in-memory storage — the file goes straight from the request buffer
+// to S3 via the SDK, never touches the container's disk.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB
+  fileFilter: (_req, file, cb) => {
+    if (!file.mimetype || !file.mimetype.startsWith("image/")) {
+      return cb(new Error("Only image files are allowed"));
+    }
+    cb(null, true);
+  },
+});
+
+// POST /productmanager/upload-image
+// multipart/form-data, single field "image". Admin auth required.
+// Returns { success: true, url: "https://<bucket>.s3.<region>.amazonaws.com/products/<uuid>.<ext>" }
+router.post("/upload-image", requireAdmin, upload.single("image"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: false, msg: "No file uploaded (field name must be 'image')" });
+    const { url, key } = await uploadProductImage(req.file);
+    res.json({ success: true, url, key });
+  } catch (err) {
+    console.error("Image upload failed:", err);
+    res.status(500).json({ success: false, msg: err.message });
+  }
+});
 
 router.get("/categories", async (_req, res) => {
   try {
