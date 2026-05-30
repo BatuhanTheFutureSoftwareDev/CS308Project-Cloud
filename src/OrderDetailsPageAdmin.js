@@ -9,7 +9,7 @@ const DELIVERY_OPTIONS = [
   { value: "delivered", label: "Delivered" },
 ];
 
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try   { return require(`./assets/${imageName}`); }
   catch { return require("./assets/logo.png"); }
 };
@@ -42,7 +42,7 @@ export default function OrderDetailsPageAdmin({ token }) {
     (async () => {
       if (!token) return navigate("/home");
       try {
-        const res  = await fetch("http://localhost:5001/purchase/all", {
+        const res  = await fetch("/purchase/all", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const json = await res.json();
@@ -148,7 +148,7 @@ export default function OrderDetailsPageAdmin({ token }) {
                       setSaveMsg((m) => ({ ...m, [it._id]: "" }));
                       try {
                         const res = await fetch(
-                          `http://localhost:5001/purchase/${it._id}/status`,
+                          `/purchase/${it._id}/status`,
                           {
                             method: "PATCH",
                             headers: {

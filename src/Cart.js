@@ -11,7 +11,7 @@ function Cart() {
   const { cart, removeFromCart, updateQuantity, getTotalPrice } = useCart();
   const [productImages, setProductImages] = useState({});
 
-  const getImage = (imageName) => {
+  const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
     if (!imageName) return images('./logo.png');
     try {
       return images(`./${imageName}`);
@@ -25,7 +25,7 @@ function Cart() {
       const newMap = {};
       for (const item of cart) {
         try {
-          const res = await fetch(`http://localhost:5001/products/${item.id}`);
+          const res = await fetch(`/products/${item.id}`);
           const data = await res.json();
           if (data.success && data.data?.image1) {
             newMap[item.id] = data.data.image1;
@@ -55,7 +55,7 @@ function Cart() {
     }
 
     try {
-      const res = await fetch('http://localhost:5001/cart/user/address', {
+      const res = await fetch('/cart/user/address', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -84,7 +84,7 @@ function Cart() {
 
   const handleQuantityChange = async (item, newQuantity) => {
     try {
-      const response = await fetch(`http://localhost:5001/products/${item.id}`);
+      const response = await fetch(`/products/${item.id}`);
       const data = await response.json();
 
       if (data.success) {
@@ -123,7 +123,7 @@ function Cart() {
               {cart.map((it) => (
                 <div key={it.id} className="cart-item">
                   <img
-                    src={getImage(productImages[it.id])}
+                    src={getImage(it.image1 || productImages[it.id])}
                     alt={it.name}
                     className="cart-item-image"
                   />
@@ -131,12 +131,12 @@ function Cart() {
                     <h3>{it.name}</h3>
                     {it.discountedPrice ? (
                       <div className="cart-item-price">
-                        <span className="original-price">€{it.price.toFixed(2)}</span>
-                        <span className="discounted-price">€{it.discountedPrice.toFixed(2)}</span>
+                        <span className="original-price">€{Number(it.price || 0).toFixed(2)}</span>
+                        <span className="discounted-price">€{Number(it.discountedPrice || 0).toFixed(2)}</span>
                         <span className="discount-badge">-{it.discountAmount}%</span>
                       </div>
                     ) : (
-                      <p className="cart-item-price">€{it.price.toFixed(2)}</p>
+                      <p className="cart-item-price">€{Number(it.price || 0).toFixed(2)}</p>
                     )}
                   </div>
                   <div className="cart-item-quantity">
@@ -156,7 +156,7 @@ function Cart() {
                     </button>
                   </div>
                   <div className="cart-item-total">
-                    €{((it.discountedPrice || it.price) * it.quantity).toFixed(2)}
+                    €{Number((it.discountedPrice || it.price || 0) * (it.quantity || 0)).toFixed(2)}
                   </div>
                   <button
                     className="remove-btn"

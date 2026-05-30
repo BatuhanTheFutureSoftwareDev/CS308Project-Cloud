@@ -41,7 +41,7 @@ function AuthModal({ isOpen, onClose, defaultActiveTab = "login", setIsSignedIn,
       }));
 
       if (itemsToMerge.length > 0) {
-        const mergeResponse = await fetch("http://localhost:5001/cart/merge", {
+        const mergeResponse = await fetch("/cart/merge", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -75,7 +75,7 @@ function AuthModal({ isOpen, onClose, defaultActiveTab = "login", setIsSignedIn,
       }
   
       /* ────────── send login request ────────── */
-      const response = await fetch("http://localhost:5001/auth/login", {
+      const response = await fetch("/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +120,7 @@ function AuthModal({ isOpen, onClose, defaultActiveTab = "login", setIsSignedIn,
   
         try {
           /* fetch profile so we can cache it locally */
-          const profileResp = await fetch("http://localhost:5001/user/profile", {
+          const profileResp = await fetch("/user/profile", {
             headers: {
               "Authorization": `Bearer ${data.token}`,
               "Accept":        "application/json"
@@ -186,7 +186,7 @@ function AuthModal({ isOpen, onClose, defaultActiveTab = "login", setIsSignedIn,
         return;
       }
 
-      const response = await fetch("http://localhost:5001/auth/register", {
+      const response = await fetch("/auth/register", {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -206,7 +206,7 @@ function AuthModal({ isOpen, onClose, defaultActiveTab = "login", setIsSignedIn,
         localStorage.setItem("token", data.token);
 
         try {
-          const profileResponse = await fetch("http://localhost:5001/user/profile", {
+          const profileResponse = await fetch("/user/profile", {
             headers: {
               "Authorization": `Bearer ${data.token}`,
               "Accept": "application/json"

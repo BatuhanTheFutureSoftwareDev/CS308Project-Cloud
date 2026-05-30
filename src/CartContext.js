@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const CART_STORAGE_KEY = 'shopping_cart';
 const CartContext = createContext();
 
-const API_URL = 'http://localhost:5001/cart';
+const API_URL = '/cart';
 
 export const CartProvider = ({ children }) => {
   // If not logged in, load the initial cart from localStorage.
@@ -28,19 +28,32 @@ export const CartProvider = ({ children }) => {
 
       const data = await response.json();
       if (response.ok && data.success) {
-        const items = data.data.map((item) => ({
-          id: item.productId._id,
-          name: item.productId.name,
-          image: item.productId.image,
-          price: item.productId.price,
-          quantity: item.quantity,
-          stock: item.productId.stock // Add stock information
-        }));
+        const items = (data.data || [])
+          .map((item) => {
+            // The cart route returns each item with productId populated to the
+            // full Product object. If populate failed (product deleted, etc.)
+            // productId is still a string and we skip the row.
+            const product = item.productId && typeof item.productId === "object" ? item.productId : null;
+            if (!product) return null;
+            return {
+              id: product.id || product._id,
+              name: product.name,
+              image1: product.image1,
+              image2: product.image2,
+              image3: product.image3,
+              price: typeof product.price === "number" ? product.price : (item.price || 0),
+              discountedPrice: product.discountedPrice ?? item.discountedPrice ?? null,
+              discountAmount: product.discountAmount ?? item.discountAmount ?? null,
+              quantity: item.quantity || 1,
+              stock: typeof product.stock === "number" ? product.stock : 0,
+            };
+          })
+          .filter(Boolean);
 
-        // Validate quantities against stock before setting cart
-        const validatedItems = items.map(item => ({
+        // Validate quantities against stock before setting cart.
+        const validatedItems = items.map((item) => ({
           ...item,
-          quantity: Math.min(item.quantity, item.stock) // Ensure quantity doesn't exceed stock
+          quantity: Math.min(item.quantity, item.stock || item.quantity),
         }));
 
         setCart(validatedItems);

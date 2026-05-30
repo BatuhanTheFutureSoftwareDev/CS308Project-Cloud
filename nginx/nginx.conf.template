@@ -1,0 +1,41 @@
+# BACKEND_URL is substituted by the official nginx-image entrypoint
+# (/docker-entrypoint.d/20-envsubst-on-templates.sh) at container start.
+# Example values:
+#   local docker-compose: http://backend:5001
+#   AWS ECS:              http://internal-cs436-backend-alb-xxxxxx.eu-west-1.elb.amazonaws.com
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # ALB target-group health check probes this on the frontend tasks.
+    location = /healthz {
+        access_log off;
+        add_header Content-Type text/plain;
+        return 200 "ok\n";
+    }
+
+    # API proxy: forward every backend-owned path prefix to the backend ALB.
+    location ~ ^/(auth|products|reviews|cart|purchase|api|productmanager|salesmanager|wishlist|user|apply-discount)(/|$) {
+        proxy_pass ${BACKEND_URL};
+
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 5s;
+        proxy_send_timeout 30s;
+        proxy_read_timeout 30s;
+
+        # Big product-image uploads etc.
+        client_max_body_size 25m;
+    }
+
+    # Everything else = React SPA static assets with history-API fallback.
+    location / {
+        root /usr/share/nginx/html;
+        try_files $uri $uri/ /index.html;
+    }
+}

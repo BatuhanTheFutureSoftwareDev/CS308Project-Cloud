@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./SaleNotification.css";
 
-const getImage = (img) => {
+const getImage = (img) => { if (typeof img === "string" && (img.startsWith("http://") || img.startsWith("https://"))) return img;
   try   { return require(`./assets/${img}`); }
   catch { return require("./assets/logo.png"); }
 };
@@ -21,7 +21,7 @@ export default function SaleNotification() {
       if (!token) { localStorage.removeItem("showSaleNotification"); return; }
 
       try {
-        const res  = await fetch("http://localhost:5001/wishlist",
+        const res  = await fetch("/wishlist",
                                  { headers:{ Authorization:`Bearer ${token}` } });
         const json = await res.json();
 

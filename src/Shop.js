@@ -17,7 +17,7 @@ function Shop({ isSignedIn }) {
 
   /* Fetch Products */
   useEffect(() => {
-    fetch("http://localhost:5001/products/sort?by=name&order=asc")
+    fetch("/products/sort?by=name&order=asc")
       .then((res) => res.json())
       .then((data) => data.success && setProducts(data.data))
       .catch(console.error);
@@ -25,7 +25,7 @@ function Shop({ isSignedIn }) {
 
   /* Fetch Categories */
   useEffect(() => {
-    fetch("http://localhost:5001/productmanager/categories")
+    fetch("/productmanager/categories")
       .then((res) => res.json())
       .then((json) => {
         if (json.success) {
@@ -37,7 +37,7 @@ function Shop({ isSignedIn }) {
   }, []);
 
   /* Image Helper */
-  const getImage = (imageName) => {
+  const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
     try {
       return require(`./assets/${imageName}`);
     } catch {

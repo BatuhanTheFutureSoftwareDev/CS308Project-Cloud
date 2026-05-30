@@ -1,6 +1,6 @@
 // src/api.js
 
-const API_URL = 'http://localhost:5001'; // Backend URL
+const API_URL = ''; // Backend URL
 
 // Register User
 export const registerUser = async (userData) => {

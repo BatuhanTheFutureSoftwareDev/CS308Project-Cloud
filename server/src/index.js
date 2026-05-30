@@ -1,70 +1,37 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const connectDB = require('./config'); 
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const { ping } = require("./config");
 
 const app = express();
 
-// Connect to MongoDB
-connectDB();
+ping().catch(() => {});
 
-// Middleware
+// In the two-container topology the frontend nginx proxies same-origin to us
+// (no CORS needed for browser → frontend). cors() stays as a safety net for
+// direct browser calls during local dev and any future case where another
+// origin needs to reach the backend ALB.
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.set('view engine', 'ejs');
-app.use(express.static('public'));
 
-// Import Routes
-const authRoutes = require('./routes/auth');
-app.use('/auth', authRoutes);
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
-const productRoutes = require('./routes/products');
-app.use('/products', productRoutes);
+app.use("/auth", require("./routes/auth"));
+app.use("/products", require("./routes/products"));
+app.use("/reviews", require("./routes/reviews"));
+app.use("/cart", require("./routes/cart"));
+app.use("/purchase", require("./routes/purchase"));
+app.use("/api/refund", require("./routes/refund"));
+app.use("/productmanager", require("./routes/productmanager"));
+app.use("/salesmanager", require("./routes/salesmanager"));
+app.use("/wishlist", require("./routes/wishlist"));
+app.use("/user", require("./routes/profile"));
+app.use("/apply-discount", require("./routes/applyDiscount"));
 
-const reviewRoutes = require('./routes/reviews');
-app.use('/reviews', reviewRoutes);
-
-const cartRoutes = require('./routes/cart');
-app.use('/cart', cartRoutes);
-
-const purchaseRoutes = require('./routes/purchase');
-app.use('/purchase', purchaseRoutes);
-
-const refundRoutes = require('./routes/refund');
-app.use('/api/refund', refundRoutes);
-
-const pmRoutes = require('./routes/productmanager');
-app.use('/productmanager', pmRoutes);
-
-const salesManagerRoutes = require('./routes/salesmanager');
-app.use('/salesmanager', salesManagerRoutes);
-
-const wishlistRoutes = require('./routes/wishlist');
-app.use('/wishlist', wishlistRoutes);
-
-const profileRoutes = require('./routes/profile');
-app.use('/user', profileRoutes);
-
-// ✅ Apply Discount Route
-const applyDiscountRoutes = require('./routes/applyDiscount');
-app.use('/apply-discount', applyDiscountRoutes);
-
-// Frontend Pages
-app.get('/', (req, res) => {
-  res.render('login');
-});
-
-app.get('/login', (req, res) => {
-  res.render('login');
-});
-
-app.get('/signup', (req, res) => {
-  res.render('signup');
-});
+// Health endpoint hit by the internal ALB target group.
+app.get("/healthz", (_req, res) => res.json({ ok: true }));
 
 const port = process.env.PORT || 5001;
-app.listen(port, () => {
-  console.log(`Server running on Port: ${port}`);
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Backend API listening on port ${port}`);
 });

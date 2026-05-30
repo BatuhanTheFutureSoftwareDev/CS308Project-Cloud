@@ -24,7 +24,7 @@ function ProfilePage({ isSignedIn, signOut }) {
 
     async function fetchUserInfo() {
       try {
-        const res = await fetch("http://localhost:5001/user/info", {
+        const res = await fetch("/user/info", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -50,7 +50,7 @@ function ProfilePage({ isSignedIn, signOut }) {
     }
 
     try {
-      const res = await fetch("http://localhost:5001/user/address", {
+      const res = await fetch("/user/address", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

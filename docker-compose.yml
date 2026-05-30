@@ -1,31 +1,51 @@
 version: "3.9"
-services:
-  mongo:
-    image: mongo
-    container_name: mongo-db
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
 
+# Local two-container reproduction of the AWS topology.
+# In AWS, `frontend` lives in public subnets behind the external ALB
+# and `backend` lives in private subnets behind the internal ALB.
+# Locally we just put both on the default bridge so the frontend can
+# reach the backend at http://backend:5001.
+services:
   backend:
     build:
-      context: ./server
-    container_name: backend-service
-    ports:
-      - "5001:5001"
-    depends_on:
-      - mongo
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: cs436-backend
+    expose:
+      - "5001"
     environment:
-      - MONGO_URL=mongodb://mongo-db:27017/cs308db
+      - PORT=5001
+      - AWS_REGION=${AWS_REGION:-eu-west-1}
+      # For local dev only; in ECS these come from the task role.
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - ADMIN_JWT_SECRET=${ADMIN_JWT_SECRET}
+      - SALES_ADMIN_JWT_SECRET=${SALES_ADMIN_JWT_SECRET}
+      - EMAIL_USER=${EMAIL_USER}
+      - EMAIL_PASS=${EMAIL_PASS}
+      - TABLE_USERS=cs436-db-users
+      - TABLE_PRODUCTS=cs436-db-products
+      - TABLE_CATEGORIES=cs436-db-categories
+      - TABLE_CARTS=cs436-db-carts
+      - TABLE_WISHLISTS=cs436-db-wishlists
+      - TABLE_REVIEWS=cs436-db-reviews
+      - TABLE_PURCHASES=cs436-db-purchases
+      - TABLE_REFUND_REQUESTS=cs436-db-refund-requests
+      - TABLE_ADMINS=cs436-db-admins
+      - TABLE_SALES_ADMINS=cs436-db-sales-admins
 
   frontend:
-    build: .
-    container_name: frontend-service
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: cs436-frontend
     ports:
-      - "3000:3000"
+      - "8080:80"
+    environment:
+      # Locally point at the backend service over the compose network.
+      # In ECS, this becomes the internal ALB DNS, e.g.
+      #   http://internal-cs436-backend-alb-xxxxxx.eu-west-1.elb.amazonaws.com
+      - BACKEND_URL=http://backend:5001
     depends_on:
       - backend
-
-volumes:
-  mongo-data:

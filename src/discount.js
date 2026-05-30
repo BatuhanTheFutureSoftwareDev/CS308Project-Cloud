@@ -8,7 +8,7 @@ export default function Discount() {
 
   /* Fetch Products */
   useEffect(() => {
-    fetch("http://localhost:5001/products")
+    fetch("/products")
       .then((res) => res.json())
       .then((data) => data.success && setProducts(data.data))
       .catch(console.error);
@@ -34,7 +34,7 @@ export default function Discount() {
     }
 
     try {
-      const res = await fetch(`http://localhost:5001/apply-discount/${productId}`, {
+      const res = await fetch(`/apply-discount/${productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -69,7 +69,7 @@ export default function Discount() {
   /* Remove Discount */
   const removeDiscount = async (productId) => {
     try {
-      const res = await fetch(`http://localhost:5001/apply-discount/remove/${productId}`, {
+      const res = await fetch(`/apply-discount/remove/${productId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

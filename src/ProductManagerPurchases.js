@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-function getImage(imageName) {
+function getImage(imageName) { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try {
     return require(`./assets/${imageName}`);
   } catch {
@@ -21,7 +21,7 @@ export default function ProductManagerPurchases() {
       const adminToken = localStorage.getItem("adminToken");
       if (!adminToken) return;
       try {
-        const res = await fetch("http://localhost:5001/purchase/all", {
+        const res = await fetch("/purchase/all", {
           headers: { Authorization: `Bearer ${adminToken}` },
         });
         const json = await res.json();

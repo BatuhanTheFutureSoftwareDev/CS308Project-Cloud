@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./RefundRequestsPage.css";
 
 // Add getImage helper
-const getImage = (imageName) => {
+const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
   try {
     return require(`./assets/${imageName}`);
   } catch {
@@ -25,7 +25,7 @@ const RefundRequestsPage = () => {
   const fetchRequests = async () => {
     try {
       const token = localStorage.getItem("salesAdminToken");
-      const response = await fetch("http://localhost:5001/api/refund/all", {
+      const response = await fetch("/api/refund/all", {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -48,7 +48,7 @@ const RefundRequestsPage = () => {
     try {
       setProcessing({ ...processing, [requestId]: true });
       const token = localStorage.getItem("salesAdminToken");
-      const response = await fetch(`http://localhost:5001/api/refund/${requestId}/${action}`, {
+      const response = await fetch(`/api/refund/${requestId}/${action}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -19,7 +19,7 @@ function Home() {
   };
 
   useEffect(() => {
-    fetch("http://localhost:5001/productmanager/categories")          // ← new endpoint
+    fetch("/productmanager/categories")          // ← new endpoint
       .then(res => res.json())
       .then(json => {
         if (json.success) {
@@ -33,7 +33,7 @@ function Home() {
 
   useEffect(() => {
     if (!selectedCategory) return;
-    fetch("http://localhost:5001/products")
+    fetch("/products")
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -47,7 +47,7 @@ function Home() {
       .catch(console.error);
   }, [selectedCategory]);
 
-  const getImage = (imageName) => {
+  const getImage = (imageName) => { if (typeof imageName === "string" && (imageName.startsWith("http://") || imageName.startsWith("https://"))) return imageName;
     try {
       return require(`./assets/${imageName}`);
     } catch {

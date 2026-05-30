@@ -18,7 +18,7 @@ function UserBar({ isSignedIn, openModal, signOut }) {
     const fetchWishlist = async () => {
       const token = localStorage.getItem("token");
       try {
-        const res   = await fetch("http://localhost:5001/wishlist", {
+        const res   = await fetch("/wishlist", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data  = await res.json();

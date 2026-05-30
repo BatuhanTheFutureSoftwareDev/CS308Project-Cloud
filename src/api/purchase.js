@@ -3,7 +3,7 @@ export const recordPurchase = async (productId, quantity = 1, totalPrice) => {
   const token = localStorage.getItem("token");
 
   try {
-    const response = await fetch("http://localhost:5001/purchase", {
+    const response = await fetch("/purchase", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
