@@ -110,19 +110,38 @@ router.post("/", authenticateToken, async (req, res) => {
       p.stock -= item.quantity;
       await Product.findByIdAndUpdate(p.id, { stock: p.stock });
 
-      const effectivePrice = item.discountedPrice || item.price;
-      const lineTotal = item.quantity * effectivePrice;
+      // Fall back to the populated product's current pricing when the cart
+      // row was created without a price snapshot (e.g. via /cart/merge).
+      const originalPrice = Number(
+        (typeof item.price === "number" && !Number.isNaN(item.price)) ? item.price
+        : (typeof p.price === "number" && p.price >= 0 ? p.price : 0)
+      );
+      const discountedPrice =
+        (typeof item.discountedPrice === "number" && !Number.isNaN(item.discountedPrice)) ? item.discountedPrice
+        : (typeof p.discountedPrice === "number" ? p.discountedPrice : null);
+      const discountAmount =
+        (typeof item.discountAmount === "number" && !Number.isNaN(item.discountAmount)) ? item.discountAmount
+        : (typeof p.discountAmount === "number" ? p.discountAmount : null);
+
+      const effectivePrice = (typeof discountedPrice === "number" && discountedPrice > 0) ? discountedPrice : originalPrice;
+      const quantity = Number(item.quantity) || 1;
+      const lineTotal = Number((quantity * effectivePrice).toFixed(2));
+
+      if (!Number.isFinite(lineTotal)) {
+        return res.status(400).json({ success: false, error: `Could not compute price for ${p?.name || "a product"}` });
+      }
+
       overallTotal += lineTotal;
 
       await new Purchase({
         userId,
         productId: p.id,
-        quantity: item.quantity,
+        quantity,
         totalPrice: lineTotal,
-        originalPrice: item.price,
-        ...(item.discountedPrice && {
-          discountedPrice: item.discountedPrice,
-          discountAmount: item.discountAmount,
+        originalPrice,
+        ...(discountedPrice != null && {
+          discountedPrice,
+          discountAmount,
         }),
         status: "processing",
         orderId,
@@ -131,11 +150,11 @@ router.post("/", authenticateToken, async (req, res) => {
       receiptItems.push({
         name: p.name,
         code: p.barcode || p.id,
-        quantity: item.quantity,
-        originalPrice: item.price,
-        ...(item.discountedPrice && {
-          discountedPrice: item.discountedPrice,
-          discountAmount: item.discountAmount,
+        quantity,
+        originalPrice,
+        ...(discountedPrice != null && {
+          discountedPrice,
+          discountAmount,
         }),
         lineTotal,
       });

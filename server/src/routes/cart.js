@@ -52,13 +52,27 @@ router.post("/merge", authenticateToken, async (req, res) => {
       if (existing) {
         existing.quantity = (existing.quantity || 0) + (quantity || 1);
         if (orderId) existing.orderId = orderId;
+        // Backfill price snapshot if missing on the existing row.
+        if (typeof existing.price !== "number" || Number.isNaN(existing.price)) {
+          const product = await Product.findById(productId);
+          if (product) {
+            existing.price = product.price;
+            existing.discountedPrice = product.discountedPrice || null;
+            existing.discountAmount = product.discountAmount || null;
+          }
+        }
         await existing.save();
       } else {
+        const product = await Product.findById(productId);
+        if (!product) continue; // skip merged rows referencing deleted products
         await new Cart({
           userId: req.user.id,
           productId,
           quantity: quantity || 1,
           orderId: orderId || undefined,
+          price: product.price,
+          discountedPrice: product.discountedPrice || null,
+          discountAmount: product.discountAmount || null,
         }).save();
       }
     }
